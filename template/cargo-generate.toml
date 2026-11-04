@@ -1,0 +1,22 @@
+[template]
+cargo_generate_version = ">=0.23.0"
+# Copied verbatim, without Liquid processing: `just` uses {{ }} for its own
+# interpolation, which Liquid would otherwise try to expand.
+exclude = ["justfile"]
+ignore = ["target"]
+
+[placeholders.description]
+type = "string"
+prompt = "One-line description"
+default = "A Rust command-line application"
+
+[placeholders.license]
+type = "string"
+prompt = "SPDX licence expression for this project"
+default = "MIT OR Apache-2.0"
+
+[placeholders.msrv_profile]
+type = "string"
+prompt = "MSRV profile (application: MSRV = pinned toolchain; library: MSRV below it)"
+choices = ["application", "library"]
+default = "application"

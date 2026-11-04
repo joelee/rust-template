@@ -1,0 +1,16 @@
+# Example configuration listing every key with its default value.
+# Copy to one of the lookup locations (see docs/configuration.md) and edit.
+# This file is checked by tests/config_example.rs: keep it in sync with the
+# schema in src/config/mod.rs.
+
+[log]
+# Minimum level written to stderr: error, warn, info, debug or trace.
+level = "info"
+
+[greeting]
+# Greeting word.
+message = "Hello"
+# How many times to print each greeting.
+repeat = 1
+# Names to greet.
+names = ["world"]
