@@ -11,7 +11,7 @@ This repository is a cargo-generate template. Everything a generated project con
 | Generate a project | `just generate <name>` |
 | Self-test both MSRV profiles | `just self-test` |
 
-Run `just self-test` before handing work back. It generates a project per profile under `target/self-test/` and runs that project's full `just ci`.
+Run `just self-test` before handing work back. It generates a project per profile under `target/self-test/` and runs that project's full `just ci`. CI (`.github/workflows/self-test.yml`) runs the same self-test on Linux and macOS; keep its tool list in step with `check-tools` in the root `justfile`.
 
 ## Rules
 

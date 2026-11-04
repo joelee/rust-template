@@ -1,0 +1,70 @@
+name: Self-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, so new RustSec advisories and yanked crates surface even without commits.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  NEXTEST_PROFILE: ci
+  GITLEAKS_VERSION: 8.30.1
+
+jobs:
+  self-test:
+    name: Self-test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the pinned Rust toolchain
+        working-directory: template
+        run: rustup toolchain install
+
+      - name: Install just and cargo tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just,cargo-generate,cargo-nextest,cargo-llvm-cov,cargo-deny
+
+      - name: Install gitleaks
+        shell: bash
+        run: |
+          case "${RUNNER_OS}-${RUNNER_ARCH}" in
+            Linux-X64) platform=linux_x64 ;;
+            Linux-ARM64) platform=linux_arm64 ;;
+            macOS-ARM64) platform=darwin_arm64 ;;
+            macOS-X64) platform=darwin_x64 ;;
+            *) echo "Unsupported runner: ${RUNNER_OS}-${RUNNER_ARCH}" >&2; exit 1 ;;
+          esac
+          cd "${RUNNER_TEMP}"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          archive="gitleaks_${GITLEAKS_VERSION}_${platform}.tar.gz"
+          checksums="gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          curl -fsSLO "${base}/${archive}"
+          curl -fsSLO "${base}/${checksums}"
+          grep " ${archive}\$" "${checksums}" | shasum -a 256 -c -
+          mkdir -p bin
+          tar -xzf "${archive}" -C bin gitleaks
+          echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
+
+      - name: Check tools
+        run: just check-tools
+
+      - name: Self-test
+        run: just self-test
